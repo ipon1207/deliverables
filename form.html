@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'blue': '#3daee9',
+            'pink': '#e974a3',
+            'orange': '#f15a22',
+            'green': '#2cde85',
+            'yellow': '#ffac33',
+            'gray-dark': '#31363b',
+            'gray': '#bdc3c7',
+            'gray-light': '#eff0f1',
+          }
+        }
+      }
+    }
+    </script>
+    <style>
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px); /* ブラー効果 */
+      z-index: 1000;
+    }
+    #loadingOverlay.hidden {
+    display: none !important; /* まじごめんこれしか思いつかなかった */
+    }
+
+   
+  </style>
+  </head>
+  <body class="bg-gray-light font-sans relative pt-0 p-1">
+    <h1 class="text-xl font-bold mb-1 text-center">
+      <a href="https://docs.google.com/spreadsheets/d/1Y-rYvmHxLIulrS1HfoBk5KCjHypdwbEyeqbZoNWRmb0/edit" target="_blank" class="text-blue hover:underline">帳簿入力フォーム</a>
+    </h1>
+
+    <form id="inputForm" class="bg-white p-6 rounded-lg shadow-md space-y-6">
+      <!-- 個数 -->
+      <div class="space-y-4"> <!-- ここで個数間の間隔を広げる -->
+        <h2 class="text-2xl font-semibold mb-4">個数</h2>
+
+        <!-- シュガー -->
+        <div class="flex justify-between items-center space-y-2"> <!-- space-y-2で上下の間隔を広げる -->
+          <label class="block font-medium w-32 text-left">シュガー</label>
+          <div class="flex space-x-2 items-center">
+            <input class="text-right border border-gray-dark rounded-md px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue" type="number" min="0" step="1" id="sugarCount" placeholder="0" value="0" oninput="updateForm()" required>
+            <button type="button" onclick="addAmount('sugarCount', 1)" class="px-4 py-2 bg-green text-white rounded hover:bg-green-700 transition duration-200">+1</button>
+            <button type="button" onclick="setAmount('sugarCount', 0)" class="px-2 py-2 bg-gray text-gray-dark rounded hover:bg-gray-400 transition duration-200">×</button>
+          </div>
+        </div>
+
+        <!-- きな粉 -->
+        <div class="flex justify-between items-center space-y-2">
+          <label class="block font-medium w-32 text-left">きな粉</label>
+          <div class="flex space-x-2 items-center">
+            <input class="text-right border border-gray-dark rounded-md px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue" type="number" min="0" step="1" id="kinakoCount" placeholder="0" value="0" oninput="updateForm()" required>
+            <button type="button" onclick="addAmount('kinakoCount', 1)" class="px-4 py-2 bg-green text-white rounded hover:bg-green-700 transition duration-200">+1</button>
+            <button type="button" onclick="setAmount('kinakoCount', 0)" class="px-2 py-2 bg-gray text-gray-dark rounded hover:bg-gray-400 transition duration-200">×</button>
+          </div>
+        </div>
+
+        <!-- ココア -->
+        <div class="flex justify-between items-center space-y-2">
+          <label class="block font-medium w-32 text-left">ココア</label>
+          <div class="flex space-x-2 items-center">
+            <input class="text-right border border-gray-dark rounded-md px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue" type="number" min="0" step="1" id="cocoaCount" placeholder="0" value="0" oninput="updateForm()" required>
+            <button type="button" onclick="addAmount('cocoaCount', 1)" class="px-4 py-2 bg-green text-white rounded hover:bg-green-700 transition duration-200">+1</button>
+            <button type="button" onclick="setAmount('cocoaCount', 0)" class="px-2 py-2 bg-gray text-gray-dark rounded hover:bg-gray-400 transition duration-200">×</button>
+          </div>
+        </div>
+
+        <!-- 抹茶 -->
+        <div class="flex justify-between items-center space-y-2">
+          <label class="block font-medium w-32 text-left">抹茶</label>
+          <div class="flex space-x-2 items-center">
+            <input class="text-right border border-gray-dark rounded-md px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue" type="number" min="0" step="1" id="matchaCount" placeholder="0" value="0" oninput="updateForm()" required>
+            <button type="button" onclick="addAmount('matchaCount', 1)" class="px-4 py-2 bg-green text-white rounded hover:bg-green-700 transition duration-200">+1</button>
+            <button type="button" onclick="setAmount('matchaCount', 0)" class="px-2 py-2 bg-gray text-gray-dark rounded hover:bg-gray-400 transition duration-200">×</button>
+          </div>
+        </div>
+
+        <!-- 合計個数 -->
+        <h4 class="text-xl font-medium flex justify-between">
+          <span>合計個数:</span>
+          <span id="totalCount" class="text-2xl font-bold">0</span>
+        </h4>
+      </div>
+
+
+      <div>
+        <h2 class="text-2xl font-semibold mb-4">金額</h2>
+        <h4 class="text-xl font-medium flex justify-between">
+          <span>合計金額:</span>
+          <span id="totalAmount" class="text-3xl font-bold">0</span>
+        </h4>
+      </div>
+
+      <!-- 受領金額フォーム -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center">
+          <label class="block font-medium w-32 text-left">受領</label>
+          <input class="text-right border border-gray-dark rounded-md px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue" 
+                type="number" min="0" step="1" id="receivedAmount" placeholder="0" oninput="updateForm()" required>
+        </div>
+
+        <!-- 受領金額のボタンをinputの下に配置 -->
+        <div class="mt-4 flex space-x-2">
+          <button type="button" onclick="addAmount('receivedAmount', 50)" class="px-2 py-1 bg-orange text-white rounded hover:bg-orange-700 transition duration-200">+50</button>
+          <button type="button" onclick="addAmount('receivedAmount', 100)" class="px-2 py-1 bg-orange text-white rounded hover:bg-orange-700 transition duration-200">+100</button>
+          <button type="button" onclick="addAmount('receivedAmount', 200)" class="px-2 py-1 bg-orange text-white rounded hover:bg-orange-700 transition duration-200">+200</button>
+          <button type="button" onclick="addAmount('receivedAmount', 500)" class="px-2 py-1 bg-orange text-white rounded hover:bg-orange-700 transition duration-200">+500</button>
+          <button type="button" onclick="addAmount('receivedAmount', 1000)" class="px-2 py-1 bg-orange text-white rounded hover:bg-orange-700 transition duration-200">+1000</button>
+          <button type="button" onclick="setAmount('receivedAmount', 0)" class="px-2 py-1 bg-gray text-gray-dark rounded hover:bg-gray-400 transition duration-200">×</button>
+        </div>
+      </div>
+
+      <!-- 差額表示 -->
+      <div>
+        <h4 class="text-xl font-medium text-right">おつり: <span id="changeAmount" class="text-2xl font-bold">0</span></h4>
+      </div>
+
+      <!-- 送信ボタン -->
+      <button id="submitButton" type="button" class="bg-blue text-white py-2 px-8 rounded hover:bg-blue-700 transition duration-200 w-full" onclick="submitForm()">送信する</button>
+      <!-- ローディング要素 -->
+      <div id="loadingOverlay" class="hidden">
+        <div id="loadingStatus" class="text-center text-xl font-bold text-blue">
+          <div class="animate-spin border-t-4 border-blue-500 border-solid rounded-full w-16 h-16 mb-4"></div>
+          送信中...
+        </div>
+      </div>
+    </form>
+
+    <script>
+      const countId = ['sugarCount', 'kinakoCount', 'cocoaCount', 'matchaCount'];
+      const formId = countId.concat(['receivedAmount']);
+
+      // 合計個数・合計金額・おつりの更新
+      function updateForm() {
+        const sugarCount = Number(document.getElementById('sugarCount').value) || 0;
+        const kinakoCount = Number(document.getElementById('kinakoCount').value) || 0;
+        const cocoaCount = Number(document.getElementById('cocoaCount').value) || 0;
+        const matchaCount = Number(document.getElementById('matchaCount').value) || 0;
+        const receivedAmount = Number(document.getElementById('receivedAmount').value) || 0;
+        // 合計個数
+        const totalCount = sugarCount + kinakoCount + cocoaCount + matchaCount;
+        // 合計金額 = 合計個数 * 値段
+        const totalAmount = totalCount * price;
+        // おつり = 受領金額 - 合計金額
+        const changeAmount = receivedAmount - totalAmount;
+        // 情報更新
+        document.getElementById('totalCount').innerText = totalCount;
+        document.getElementById('totalAmount').innerText = totalAmount;
+        document.getElementById('changeAmount').innerText = changeAmount;
+      }
+
+      // Amount の増減
+      function addAmount(fieldId, amount) {
+        const field = document.getElementById(fieldId);
+        // 変更後の値が0以上になるようにする
+        if (Number(field.value || 0) + amount >= 0) {
+          field.value = Number(field.value || 0) + amount;
+          updateForm();
+        }
+      }
+
+      // 0ボタンが押されたときに指定されたフィールドを0にリセット
+      function setAmount(fieldId, amount = 0) {
+        const field = document.getElementById(fieldId);
+        field.value = amount;
+        updateForm();
+      }
+
+      // callback processInput()
+      function resetForm() {
+        for(let element of formId) {
+          setAmount(element, 0);
+        }
+        updateForm();
+        submitButton.disabled = false;
+        loadingOverlay.classList.add('hidden');
+        console.log("リセットフォーム")
+      }
+
+      // フォーム送信
+      function submitForm() {
+        const submitButton = document.getElementById('submitButton');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        const sugarCount = Number(document.getElementById('sugarCount').value || 0);
+        const kinakoCount = Number(document.getElementById('kinakoCount').value || 0);
+        const cocoaCount = Number(document.getElementById('cocoaCount').value || 0);
+        const matchaCount = Number(document.getElementById('matchaCount').value || 0);
+        const totalAmount = Number(document.getElementById('totalAmount').innerText) || 0;
+        const receivedAmount = Number(document.getElementById('receivedAmount').value || 0);
+
+        // 受領金額が合計金額より少ない場合のバリデーション
+        if (receivedAmount < totalAmount) {
+          alert('受領金額は合計金額以上である必要があります。もう一度入力してください。');
+          return; // 送信を中止
+        }
+        else if(totalAmount == 0) {
+          alert('合計金額が0円です。もう一度入力してください。');
+          return; // 送信を中止
+        }
+        else if(sugarCount < 0 || kinakoCount < 0 || cocoaCount < 0 || matchaCount < 0 || receivedAmount < 0) {
+          alert('個数および受領金額が0未満です。もう一度入力してください。');
+          return; // 送信中止
+        }
+        // 送信ボタンを無効にし、ローディングインジケーターを表示
+        submitButton.disabled = true;
+        loadingOverlay.classList.remove('hidden');
+        google.script.run.withSuccessHandler(resetForm).processInput(sugarCount, kinakoCount, cocoaCount, matchaCount, receivedAmount);
+
+      // データを送信
+  }        // google.script.host.close();
+      
+    </script>
+  </body>
+</html>
